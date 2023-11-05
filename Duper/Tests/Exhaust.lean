@@ -7,7 +7,8 @@ For example,
 ```
 example {P Q : Prop} (h1 : P ∨ Q) (h2 : ¬ P) : Q := by exhaust
 example {x : Nat} (h1 : x = 0 ∨ x = 1) (h2 : x = 0 ∨ x = 2) : x = 0 := by exhaust
-``` -/
+```
+-/
 elab "exhaust" : tactic => withMainContext do
   evalTactic (← `(tactic| apply Classical.byContradiction _; intro))
   withMainContext do
