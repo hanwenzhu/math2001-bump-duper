@@ -10,13 +10,15 @@ open Meta
 
 initialize registerTraceClass `Rule.falseElim
 
-/-- Determines whether a literal has can be unified with the form `False = True` or `True = False`. If it can
-    be, then the substitution necessary to achieve that match is applied (if the match is unsuccessful, then
-    the MCtx remains unchanged) -/
-def isFalseLiteral (lit : Lit) : MetaM Bool := do
-  if ← Meta.fastUnify #[(lit.lhs, mkConst ``False), (lit.rhs, mkConst ``True)] then return true
-  else if ← Meta.fastUnify #[(lit.lhs, mkConst ``True), (lit.rhs, mkConst ``False)] then return true
-  else return false
+/-- Determines whether a literal is of the form `a = b`, for decidably non-equal expressions `a`
+and `b`. -/
+def isDecidablyFalseLiteral (lit : Lit) : MetaM Bool := do
+  try
+    let d ← mkDecide lit.toExpr
+    let d ← instantiateMVars d
+    let r ← withDefault <| whnf d
+    return r.isConstOf ``false
+  catch _ => return false
 
 theorem false_ne_true (h : False = True) : False := by rw [h]; exact ⟨⟩
 theorem true_ne_false (h : True = False) : False := by rw [← h]; exact ⟨⟩
@@ -33,18 +35,24 @@ def mkFalseElimProof (i : Nat) (premises : List Expr) (parents : List ProofParen
     for j in [:parentLits.size] do
       let lit := parentLits[j]!
       if i == j then
-        if lit.lhs == mkConst ``True then -- lit unified with `True = False`
-          let pr ← Meta.withLocalDeclD `h lit.toExpr fun h => do
-            let proofCase := mkApp (mkConst ``true_ne_false) h
-            let proofCase := mkApp2 (mkConst ``False.elim [levelZero]) body proofCase
-            Meta.mkLambdaFVars #[h] proofCase
-          caseProofs := caseProofs.push pr
-        else -- lit unified with `False = True`
-          let pr ← Meta.withLocalDeclD `h lit.toExpr fun h => do
-            let proofCase := mkApp (mkConst ``false_ne_true) h
-            let proofCase := mkApp2 (mkConst ``False.elim [levelZero]) body proofCase
-            Meta.mkLambdaFVars #[h] proofCase
-          caseProofs := caseProofs.push pr
+        -- this is adapted from the internals of `decide`
+        let expectedType := lit.toExpr
+        trace[Rule.falseElim] "Trying to decide {expectedType}"
+        let d ← mkDecide expectedType
+        let d ← instantiateMVars d
+        let r ← withDefault <| whnf d
+        unless r.isConstOf ``false do
+          throwError "failed to reduce to 'false'{indentExpr r}"
+        trace[Rule.falseElim] "{d} is false"
+        let s := d.appArg! -- get instance from `d`
+        let rflPrf ← mkEqRefl (toExpr false)
+        let proofCase := mkApp3 (Lean.mkConst ``of_decide_eq_false) expectedType s rflPrf
+        trace[Rule.falseElim] "built {proofCase} proving {d} is false"
+        let pr ← Meta.withLocalDeclD `h lit.toExpr fun h => do
+          let proofCase := mkApp proofCase h
+          let proofCase := mkApp2 (mkConst ``False.elim [levelZero]) body proofCase
+          Meta.mkLambdaFVars #[h] proofCase
+        caseProofs := caseProofs.push pr
       else
         -- need proof of `L_j → L_1 ∨ ... ∨ L_n`
         let pr ← Meta.withLocalDeclD `h lit.toExpr fun h => do
@@ -61,7 +69,7 @@ def falseElimAtLit (given : Clause) (c : MClause) (i : Nat) : RuleM (Array Claus
     let eligibility ← eligibilityPreUnificationCheck c (alreadyReduced := true) i
     if eligibility == Eligibility.notEligible then return #[]
     let loaded ← getLoadedClauses
-    let ug ← DUnif.UnifierGenerator.fromMetaMProcedure (isFalseLiteral lit)
+    let ug ← DUnif.UnifierGenerator.fromMetaMProcedure (isDecidablyFalseLiteral lit)
     let yC := do
       setLoadedClauses loaded
       if (not $ ← eligibilityPostUnificationCheck c (alreadyReduced := false) i eligibility (strict := true)) then return none
