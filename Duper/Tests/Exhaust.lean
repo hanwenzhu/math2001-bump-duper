@@ -57,6 +57,14 @@ example (h : 1 = 3) : False := by
   have : 4 = 4 := rfl
   exhaust
 
+inductive GreekLetter
+  | alpha
+  | beta
+  | gamma
+  deriving DecidableEq
+
+example (hx : GreekLetter.gamma = GreekLetter.beta) : False := by exhaust
+
 -- ideally this would fail, but the `1 + 1` gets cleaned up to `2` in the `whnf` preprocessing,
 -- and that preprocessing seems to be necessary
 example (h : 1 = 1 + 1) : False := by exhaust
