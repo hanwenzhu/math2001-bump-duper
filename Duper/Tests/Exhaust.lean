@@ -25,6 +25,7 @@ elab "exhaust" : tactic => withMainContext do
 -- set_option trace.Rule.falseElim true
 -- set_option inhabitationReasoning false
 set_option linter.unusedVariables false
+set_option includeHoistRules false
 
 example {P Q : Prop} (h1 : P ∨ Q) (h2 : ¬ P) : Q := by exhaust
 

@@ -315,18 +315,6 @@ def clausificationStepE (e : Expr) (sign : Bool) : RuleM (Array ClausificationRe
   | true, Expr.app (Expr.app (Expr.const ``Or _) e₁) e₂ =>
     let pr : Expr → Array Expr → MetaM Expr := fun premise _ => Meta.mkAppM ``clausify_or #[premise]
     return #[⟨#[Lit.fromSingleExpr e₁, Lit.fromSingleExpr e₂], pr, #[]⟩]
-  | true, Expr.forallE _ ty b _ => do
-    if (← inferType ty).isProp && !b.hasLooseBVars then
-      let pr : Expr → Array Expr → MetaM Expr := fun premise _ => Meta.mkAppM ``clausify_imp #[premise]
-      return #[⟨#[Lit.fromSingleExpr ty false, Lit.fromSingleExpr b], pr, #[]⟩]
-    else
-      let pr : Expr → Array Expr → MetaM Expr := fun premise trs => do
-        let #[tr] := trs
-          | throwError "clausificationStepE :: Wrong number of transferExprs"
-        Meta.mkAppM ``clausify_forall #[tr, premise]
-      let mvar ← mkFreshExprMVar ty
-      return #[⟨#[Lit.fromSingleExpr $ b.instantiate1 mvar], pr, #[mvar]⟩]
-  | true, Expr.app (Expr.app (Expr.const ``Exists _) _) _ => clausifyExists e
   | false, Expr.app (Expr.app (Expr.const ``And _) e₁) e₂  => 
     let pr : Expr → Array Expr → MetaM Expr := fun premise _ => Meta.mkAppM ``clausify_and_false #[premise]
     return #[⟨#[Lit.fromSingleExpr e₁ false, Lit.fromSingleExpr e₂ false], pr, #[]⟩]
@@ -336,17 +324,6 @@ def clausificationStepE (e : Expr) (sign : Bool) : RuleM (Array ClausificationRe
     /- e₂ and pr₂ are placed first in the list because "∨" is right-associative. So if we decompose "a ∨ b ∨ c ∨ d... = False" we want
        "b ∨ c ∨ d... = False" to be the first clause (which will return to Saturate's simpLoop to receive further clausification) -/
     return #[⟨#[Lit.fromSingleExpr e₂ false], pr₂, #[]⟩, ⟨#[Lit.fromSingleExpr e₁ false], pr₁, #[]⟩]
-  | false, Expr.forallE .. => clausifyForall e
-  | false, Expr.app (Expr.app (Expr.const ``Exists _) ty) f => do
-    let pr : Expr → Array Expr → MetaM Expr := fun premise trs => do
-      let #[tr] := trs
-        | throwError "clausificationStepE :: Wrong number of transferExprs"
-      Meta.mkAppM ``clausify_exists_false #[tr, premise]
-    let mvar ← mkFreshExprMVar ty
-    let apf := match f with
-               | .lam _ _ b _ => b.instantiate1 mvar
-               | _ => mkApp f mvar
-    return #[⟨#[Lit.fromSingleExpr apf false], pr, #[mvar]⟩]
   | true, Expr.app (Expr.app (Expr.app (Expr.const ``Eq [lvl]) ty) e₁) e₂  =>
     let pr : Expr → Array Expr → MetaM Expr := fun premise _ => Meta.mkAppM ``of_eq_true #[premise]
     return #[⟨#[{sign := true, lhs := e₁, rhs := e₂, lvl := lvl, ty := ty}], pr, #[]⟩]

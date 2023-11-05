@@ -358,13 +358,11 @@ def isFullyAppliedLogicalSymbol (e : Expr) : Bool :=
   | Expr.const ``False _ => true
   | Expr.const ``True _ => true
   | Expr.app (Expr.const ``Not _) _ => true
-  | Expr.app (Expr.app (Expr.const ``Exists _) _) _ => true
   | Expr.app (Expr.app (Expr.app (Expr.const ``Eq _) _) _) _ => true
   | Expr.app (Expr.app (Expr.app (Expr.const ``Ne _) _) _) _ => true
   | Expr.app (Expr.app (Expr.const ``And _) _) _ => true
   | Expr.app (Expr.app (Expr.const ``Or _) _) _ => true
   | Expr.app (Expr.app (Expr.const ``Iff _) _) _ => true
-  | Expr.forallE _ _ _ _ => true
   | _ => false
 
 end Lean.Expr
