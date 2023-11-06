@@ -467,7 +467,7 @@ def runDuper (facts : Syntax.TSepArray `term ",") (withAllLCtx : Bool) (goalDecl
   (instanceMaxHeartbeats : Nat) : TacticM ProverM.State :=
   withNewMCtxDepth do
     let formulas ← collectAssumptions facts.getElems withAllLCtx goalDecls
-    -- HM: seems to be a bug in the line of `unfoldDefinitions` invoking `Lean.Expr.instantiate1`
+    -- HM: turn off this preprocessing step since it transforms the problem as a whole
     -- let formulas ← unfoldDefinitions formulas
     trace[Meta.debug] "Formulas from collectAssumptions: {Duper.ListToMessageData formulas collectedAssumptionToMessageData}"
     /- `collectAssumptions` should not be wrapped by `withoutModifyingCoreEnv` because new definitional equations might be
