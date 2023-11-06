@@ -57,13 +57,25 @@ example (h : 1 = 3) : False := by
   have : 4 = 4 := rfl
   exhaust
 
+section
+
 inductive GreekLetter
-  | alpha
   | beta
   | gamma
   deriving DecidableEq
 
-example (hx : GreekLetter.gamma = GreekLetter.beta) : False := by exhaust
+export GreekLetter (beta gamma)
+
+example (hx : gamma = beta) : False := by exhaust
+
+def f : GreekLetter → GreekLetter
+  | beta => gamma
+  | gamma => beta
+
+example (h : f beta = beta) : False := by exhaust
+example (h : f beta ≠ gamma) : False := by exhaust
+
+end
 
 -- ideally this would fail, but the `1 + 1` gets cleaned up to `2` in the `whnf` preprocessing,
 -- and that preprocessing seems to be necessary

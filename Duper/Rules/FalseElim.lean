@@ -11,7 +11,7 @@ open Meta
 initialize registerTraceClass `Rule.falseElim
 
 /-- Determines whether a literal is of the form `a = b`, for decidably non-equal expressions `a`
-and `b`. -/
+and `b`, or of the form `a ≠ b`, for decidably equal expressions `a` and `b`. -/
 def isDecidablyFalseLiteral (lit : Lit) : MetaM Bool := do
   try
     let d ← mkDecide lit.toExpr
@@ -84,9 +84,8 @@ def falseElim (given : Clause) (c : MClause) (cNum : Nat) : RuleM (Array ClauseS
   trace[Rule.falseElim] "Running FalseElim on {c.lits}"
   let mut streams := #[]
   for i in [:c.lits.size] do
-    if c.lits[i]!.sign then
-      let str ← falseElimAtLit given c i
-      streams := streams.append str
+    let str ← falseElimAtLit given c i
+    streams := streams.append str
   return streams
 
 end Duper
