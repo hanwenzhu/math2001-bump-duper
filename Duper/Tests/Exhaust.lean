@@ -12,7 +12,7 @@ example {x : Nat} (h1 : x = 0 ∨ x = 1) (h2 : x = 0 ∨ x = 2) : x = 0 := by ex
 elab "exhaust" : tactic => withMainContext do
   evalTactic (← `(tactic| apply Classical.byContradiction _; intro))
   withMainContext do
-    let state ← runDuper {} true #[] 0
+    let state ← withOptions (fun o => o.set `includeHoistRules false) $ runDuper {} true #[] 0
     match state.result with
     | Duper.ProverM.Result.contradiction => applyProof state
     | Duper.ProverM.Result.saturated =>
@@ -26,7 +26,6 @@ elab "exhaust" : tactic => withMainContext do
 -- set_option trace.Rule.falseElim true
 -- set_option inhabitationReasoning false
 set_option linter.unusedVariables false
-set_option includeHoistRules false
 
 example {P Q : Prop} (h1 : P ∨ Q) (h2 : ¬ P) : Q := by exhaust
 
