@@ -64,7 +64,7 @@ def StrategyHeap.toList [BEq α] [Hashable α]
 --   weight heap and the second heap is the age heap
 abbrev FairAgeHeap (α : Type u) [BEq α] [Hashable α]
   := StrategyHeap α (β:=Nat)
-  
+
 abbrev FairAgeHeap.empty (α : Type u) [BEq α] [Hashable α] (fN : Nat) : FairAgeHeap α :=
   -- status : fairnessCounter
   -- true   : weight heap
@@ -87,4 +87,4 @@ private def testheap₁ : IO Unit := do
     else
       println! "No"
 
-#eval testheap₁
+-- #eval testheap₁
