@@ -134,7 +134,7 @@ def derefNormEq (u : UnifEq) : MetaM UnifEq := do
   -- avoid left-rigid right-flex
   if ¬ lflex' ∧ rflex' then
     return {lhs := rhs', lflex := rflex', rhs := lhs', rflex := lflex'}
-  else 
+  else
     return {lhs := lhs', lflex := lflex', rhs := rhs', rflex := rflex'}
 
 def derefNormProblem (p : UnifProblem) : MetaM UnifProblem := do
@@ -326,14 +326,14 @@ def applyRules (p : UnifProblem) (config : Config) : MetaM UnifRuleResult := do
         if config.iterationOn then
           let liter ← DUnif.iteration lh p eq false
           let riter ← DUnif.iteration rh p eq false
-          return LazyList.interleave liter riter
+          return Duper.LazyList.interleave liter riter
         else
-          return LazyList.nil)
+          return Duper.LazyList.nil)
       -- Identification
       let mut arr := #[]
       match (← DUnif.identification lh rh p eq) with
       | .NewArray a => arr := arr.append a
-      | .NewLazyList l => ll := LazyList.interleave l ll
+      | .NewLazyList l => ll := Duper.LazyList.interleave l ll
       | .Succeed => throwError "applyRules :: identification never succeeds"
       -- JP style projection
       if ¬ p.identVar.contains lh then
@@ -352,10 +352,10 @@ def applyRules (p : UnifProblem) (config : Config) : MetaM UnifRuleResult := do
         if config.iterationOn then
           DUnif.iteration lh p eq true
         else
-          return LazyList.nil)
+          return Duper.LazyList.nil)
       -- Eliminations
       let elims ← DUnif.elimination lh p eq
-      return .NewLazyList (LazyList.cons (pure decomp) (LazyList.interleave elims iters))
+      return .NewLazyList (Duper.LazyList.cons (pure decomp) (Duper.LazyList.interleave elims iters))
   else
     -- No equations left
     return .Succeed
@@ -366,7 +366,7 @@ def applyRules (p : UnifProblem) (config : Config) : MetaM UnifRuleResult := do
 
 inductive QueueElement
 | Problem : UnifProblem → QueueElement
-| LazyListOfProblem : LazyList (MetaM (Array UnifProblem)) → QueueElement
+| LazyListOfProblem : Duper.LazyList (MetaM (Array UnifProblem)) → QueueElement
 deriving Inhabited
 
 structure UnifierGenerator where
@@ -421,7 +421,7 @@ def UnifierGenerator.take (ug : UnifierGenerator) :
         q' := q'.enqueue (.Problem (← a.pushParentClauseIfDbgOn (ug.N + cnt)))
         cnt := cnt + 1
       return (none, ⟨q', ug.N + arr.size, ug.cfg⟩)
-    -- ls : LazyList (MetaM (Array UnifProblem))
+    -- ls : Duper.LazyList (MetaM (Array UnifProblem))
     | .NewLazyList ls => pure (none, ⟨q'.enqueue (.LazyListOfProblem ls), ug.N, ug.cfg⟩)
     -- b : Bool
     | .Succeed => return (some up, ⟨q', ug.N, ug.cfg⟩)
