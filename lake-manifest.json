@@ -1,12 +1,14 @@
-{"version": 6,
- "packagesDir": "lake-packages",
+{"version": 7,
+ "packagesDir": ".lake/packages",
  "packages":
- [{"git":
-   {"url": "https://github.com/leanprover/std4.git",
-    "subDir?": null,
-    "rev": "2b8aaf35445a336eafb3d73631df184e7c7b7691",
-    "opts": {},
-    "name": "std",
-    "inputRev?": "main",
-    "inherited": false}}],
- "name": "Duper"}
+ [{"url": "https://github.com/leanprover/std4.git",
+   "type": "git",
+   "subDir": null,
+   "rev": "ff9850c4726f6b9fb8d8e96980c3fcb2900be8bd",
+   "name": "std",
+   "manifestFile": "lake-manifest.json",
+   "inputRev": "ff9850c4726f6b9fb8d8e96980c3fcb2900be8bd",
+   "inherited": false,
+   "configFile": "lakefile.lean"}],
+ "name": "Duper",
+ "lakeDir": ".lake"}

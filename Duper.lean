@@ -1,4 +1,4 @@
-import Duper.Tests.test
+import Duper.Tactic
 /-
 import Duper.Tests.LCL_tests
 import Duper.Tests.COM_tests

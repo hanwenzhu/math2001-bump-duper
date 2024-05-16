@@ -1,4 +1,5 @@
 import Lean
+import Lean.Meta.Tactic.TryThis
 import Duper.Saturate
 
 open Lean
@@ -666,13 +667,13 @@ def mkDuperCallSuggestion (duperStxRef : Syntax) (origSpan : Syntax) (facts : Sy
   let configOptionsStx : Syntax.TSepArray `Duper.configOption "," := {elemsAndSeps := configOptionsArr}
   if withDuperStar && facts.elemsAndSeps.isEmpty then
     let suggestion ←`(tactic| duper [*] {$configOptionsStx,*})
-    Std.Tactic.TryThis.addSuggestion duperStxRef suggestion (origSpan? := origSpan)
+    Tactic.TryThis.addSuggestion duperStxRef suggestion (origSpan? := origSpan)
   else if withDuperStar then
     let suggestion ←`(tactic| duper [*, $facts,*] {$configOptionsStx,*})
-    Std.Tactic.TryThis.addSuggestion duperStxRef suggestion (origSpan? := origSpan)
+    Tactic.TryThis.addSuggestion duperStxRef suggestion (origSpan? := origSpan)
   else
     let suggestion ←`(tactic| duper [$facts,*] {$configOptionsStx,*})
-    Std.Tactic.TryThis.addSuggestion duperStxRef suggestion (origSpan? := origSpan)
+    Tactic.TryThis.addSuggestion duperStxRef suggestion (origSpan? := origSpan)
 
 /-- Implements duper calls when portfolio mode is enabled. If `duperStxInfo` is not none and `runDuperPortfolioMode` succeeds in deriving
     a contradiction, then `Std.Tactic.TryThis.addSuggestion` will be used to give the user a more specific invocation of duper that can
